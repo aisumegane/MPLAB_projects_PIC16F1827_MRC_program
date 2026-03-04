@@ -19,10 +19,18 @@
                    projectFiles="true">
       <logicalFolder name="source" displayName="source" projectFiles="true">
         <logicalFolder name="mcufunc" displayName="mcufunc" projectFiles="true">
+          <itemPath>source/mcufunc/adc.c</itemPath>
+          <itemPath>source/mcufunc/adc.h</itemPath>
+          <itemPath>source/mcufunc/int.c</itemPath>
+          <itemPath>source/mcufunc/int.h</itemPath>
+          <itemPath>source/mcufunc/mcu_setup.c</itemPath>
+          <itemPath>source/mcufunc/mcu_setup.h</itemPath>
         </logicalFolder>
         <logicalFolder name="usertools" displayName="usertools" projectFiles="true">
         </logicalFolder>
         <itemPath>source/main.c</itemPath>
+        <itemPath>source/main.h</itemPath>
+        <itemPath>source/userdefine.h</itemPath>
       </logicalFolder>
     </logicalFolder>
   </logicalFolder>
