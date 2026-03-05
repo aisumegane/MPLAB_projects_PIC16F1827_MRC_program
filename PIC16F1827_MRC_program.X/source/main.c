@@ -36,18 +36,15 @@
  */
 
 #include <xc.h>
-
+#include "userdefine.h"     /* ※ヘッダファイル内でも定義を使用しているので、エラーが出ないよう一番最初に呼び出す※ */
 
 /* 追加インクルード*/
-/* mcufuncフォルダ */
+
 #include "./mcufunc/adc.h"
+#include "./mcufunc/gpio.h"
 #include "./mcufunc/int.h"
 #include "./mcufunc/mcu_setup.h"
 
-/* usertoolsフォルダ */
-
-/* 同一階層 */
-#include "userdefine.h"
 
 
 /* 関数プロトタイプ宣言 */
@@ -121,6 +118,7 @@ static void func_main_s_loop( void )
     /* 関数コール */
     func_adc_g_main();          /* AD変換処理　 */
     func_int_g_main();          /* 割り込み処理 */
+    func_gpio_g_main();         /* GPIOポート更新処理 */
 }
 
 
@@ -137,6 +135,7 @@ static void func_main_s_init( void )
     /* ファイルの並び順に整列 */
     func_adc_g_init();
     func_int_g_init();
+    func_gpio_g_init();
 }
 
 

@@ -25,6 +25,8 @@
           <itemPath>source/mcufunc/int.h</itemPath>
           <itemPath>source/mcufunc/mcu_setup.c</itemPath>
           <itemPath>source/mcufunc/mcu_setup.h</itemPath>
+          <itemPath>source/mcufunc/gpio.c</itemPath>
+          <itemPath>source/mcufunc/gpio.h</itemPath>
         </logicalFolder>
         <logicalFolder name="usertools" displayName="usertools" projectFiles="true">
         </logicalFolder>
