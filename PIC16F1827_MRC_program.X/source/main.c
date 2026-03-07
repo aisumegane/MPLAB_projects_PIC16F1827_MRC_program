@@ -46,6 +46,9 @@
 #include "./mcufunc/mcu_setup.h"
 
 
+/* ファイル内定義 */
+#define MAIN_TASK_DIVIDER       ((u8)10)
+
 
 /* 関数プロトタイプ宣言 */
 static void func_main_s_init( void );
@@ -55,7 +58,8 @@ static void func_main_s_loop( void );
 
 /* 変数宣言 */
 static u8 u8_main_s_loop_go;
-static u8 u8_main_s_10ms_task_flag;
+static u8 u8_main_s_10ms_task_cnt;
+static u8 u8_main_s_10ms_task_chk_flag;
 
 
 /**************************************************************/
@@ -65,7 +69,7 @@ static u8 u8_main_s_10ms_task_flag;
 /**************************************************************/
 void main(void)
 {   
-    func_mset_g_main();                     /* マイコン初期化 */
+    func_mset_g_init();                     /* マイコン初期化 */
     func_main_s_init();                     /* 変数初期化 */
     func_mset_g_mcu_start_condition();      /* プログラム開始状態 */
 
@@ -87,7 +91,12 @@ void main(void)
 /**************************************************************/
 void  func_main_s_main_loop_judge( void )
 {
-    u8_main_s_loop_go = SET;
+    u8_main_s_10ms_task_cnt++;
+
+    if( u8_main_s_10ms_task_cnt > MAIN_TASK_DIVIDER )
+    { /* 割り込み発生から分周完了 */
+        u8_main_s_loop_go = SET;
+    }
 }
 
 
@@ -103,14 +112,14 @@ static void func_main_s_loop( void )
 {
     /* テスト出力 */
     /* 10ms感覚で出力反転 */
-    if( u8_main_s_10ms_task_flag == CLEAR )
+    if( u8_main_s_10ms_task_chk_flag == CLEAR )
     {
-        u8_main_s_10ms_task_flag = SET;
+        u8_main_s_10ms_task_chk_flag = SET;
         LATA |= 0x02U;          /* RA1 : HI */
     }
     else
     {
-        u8_main_s_10ms_task_flag = CLEAR;
+        u8_main_s_10ms_task_chk_flag = CLEAR;
         LATA &= (u8)~0x02U;     /* RA1 : LOW */
     }
 
@@ -129,8 +138,9 @@ static void func_main_s_loop( void )
 /**************************************************************/
 static void func_main_s_init( void )
 {
-    u8_main_s_loop_go = CLEAR;
-    u8_main_s_10ms_task_flag = CLEAR;
+    u8_main_s_loop_go = CLEAR;                  /* 初期化 */
+    u8_main_s_10ms_task_cnt = (u8)0;            /* 初期化 */
+    u8_main_s_10ms_task_chk_flag = CLEAR;       /* 初期化 */
     
     /* ファイルの並び順に整列 */
     func_adc_g_init();

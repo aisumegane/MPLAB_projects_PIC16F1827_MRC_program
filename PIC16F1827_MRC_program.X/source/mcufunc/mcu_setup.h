@@ -13,7 +13,7 @@ extern "C" {
 #endif
 
 extern void func_mset_g_mcu_start_condition( void );
-extern void func_mset_g_main( void );
+extern void func_mset_g_init( void );
 extern void func_mset_g_init( void );
 
 #ifdef	__cplusplus

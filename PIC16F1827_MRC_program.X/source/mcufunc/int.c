@@ -13,8 +13,16 @@
 
 #include "int.h"
 
+
+/* 割り込みフラグ bit位置定義 define */
+#define INT_FLAG_TMR0_OVF           ((u8)0x04)
+#define INT_FLAG_TMR4_MATCH         ((u8)0x02)
+#define INT_FLAG_AD_COMPLITE        ((u8)0x40)
+
+
 /* 関数プロトタイプ宣言 */
-static void func_int_s_tmr4_match( void );
+static void func_int_s_timer0_ovf( void );
+static void func_int_s_timer4_match( void );
 
 
 
@@ -26,16 +34,25 @@ static void func_int_s_tmr4_match( void );
 /**************************************************************/
 void __interrupt() isr( void )
 {
-    if( ( PIR3 & 0x02U ) != 0U )
-    { /* TMR4 一致割り込み発生 */
-        func_int_s_tmr4_match();
-        PIR3 &= (u8)~0x02U;                         /* 割り込みフラグクリア */
+    /* 割り込みベクタ1コですべてここに来るため、実質記述順序が割り込み優先度になる */
+    /* 割り込みが同時に入った場合はこの処理の中で長い時間待機してしまう点忘れない! */
+
+    if( ( INTCON & INT_FLAG_TMR0_OVF ) != 0U )
+    { /* TMR0 オーバーフロー割り込み発生 */
+        func_int_s_timer0_ovf();
+        INTCON &= (u8)~INT_FLAG_TMR0_OVF;
     }
 
-    if( ( PIR1 & 0x40U ) != 0U )
+    if( ( PIR3 & INT_FLAG_TMR4_MATCH ) != 0U )
+    { /* TMR4 一致割り込み発生 */
+        func_int_s_timer4_match();
+        PIR3 &= (u8)~INT_FLAG_TMR4_MATCH;                         /* 割り込みフラグクリア */
+    }
+
+    if( ( PIR1 & INT_FLAG_AD_COMPLITE ) != 0U )
     { /* AD変換 完了割り込み発生 */
         func_adc_g_adc_data_get();                 /* AD変換結果格納 & 残りの変換要求を処理する */
-        PIR1 &= (u8)~0x40U;                         /* 割り込みフラグクリア */
+        PIR1 &= (u8)~INT_FLAG_AD_COMPLITE;                         /* 割り込みフラグクリア */
     }
 }
 
@@ -63,12 +80,21 @@ void func_int_g_init( void )
 }
 
 
+/**************************************************************/
+/*  Function:                                                 */
+/*  タイマ0 OVF割り込みタスク                                   */
+/**************************************************************/
+static void func_int_s_timer0_ovf( void )
+{
+    func_main_s_main_loop_judge();
+}
+
 
 /**************************************************************/
 /*  Function:                                                 */
 /*  タイマ4 一致割り込みタスク                                  */
 /**************************************************************/
-static void func_int_s_tmr4_match( void )
+static void func_int_s_timer4_match( void )
 {
-    func_main_s_main_loop_judge();
+    
 }
