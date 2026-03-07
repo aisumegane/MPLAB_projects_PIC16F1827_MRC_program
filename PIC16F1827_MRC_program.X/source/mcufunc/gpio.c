@@ -8,13 +8,21 @@
 #include <xc.h>
 #include "pic16F1827.h"
 
-#include "./userdefine.h"
+#include "../userdefine.h"
 
 #include "gpio.h"
 
 
 #define GPIO_PORT_IN_JUDGE_CNT      ((u8)2)
 
+/* 入力ポート割り当て設定 */
+#define GPIO_IN_NERUTRAL_PORT       RB0
+#define GPIO_IN_SHIFT_0_PORT        RB1
+#define GPIO_IN_SHIFT_1_PORT        RB2
+#define GPIO_IN_SHIFT_2_PORT        RB3
+
+/* 出力ポート割り当て設定 */
+#define GPIO_OUT_7SEG_LED_DATA_A    
 
 
 ts_gpio_in_def ts_gpio_g_in_shift_0;
@@ -22,6 +30,9 @@ ts_gpio_in_def ts_gpio_g_in_shift_1;
 ts_gpio_in_def ts_gpio_g_in_shift_2;
 ts_gpio_in_def ts_gpio_g_in_neutral;
 
+
+/*  */
+//static const gpio_g_output_port[  ]
 
 static const ts_gpio_in_def ts_gpio_s_in_init =
 {
@@ -84,10 +95,10 @@ void func_gpio_g_init( void )
 /**************************************************************/
 static void func_gpio_s_in_judge( void )
 {
-    func_gpio_s_port_judge( ts_gpio_g_in_neutral, (u8)RB0 );
-    func_gpio_s_port_judge( ts_gpio_g_in_shift_0, (u8)RB1 );
-    func_gpio_s_port_judge( ts_gpio_g_in_shift_1, (u8)RB2 );
-    func_gpio_s_port_judge( ts_gpio_g_in_shift_2, (u8)RB3 );
+    func_gpio_s_port_judge( ts_gpio_g_in_neutral, GPIO_IN_NERUTRAL_PORT );
+    func_gpio_s_port_judge( ts_gpio_g_in_shift_0, GPIO_IN_SHIFT_0_PORT  );
+    func_gpio_s_port_judge( ts_gpio_g_in_shift_1, GPIO_IN_SHIFT_1_PORT  );
+    func_gpio_s_port_judge( ts_gpio_g_in_shift_2, GPIO_IN_SHIFT_2_PORT  );
 }
 
 
@@ -99,7 +110,15 @@ static void func_gpio_s_in_judge( void )
 /**************************************************************/
 static void func_gpio_s_out_update( void )
 {
-    LATB5 = u8_gpio_g_out_7seg_led_data_a;
+    /* 基本SET or CLEAR なので下位1bitしか数値が入ってないはずだが、一応ビットマスクしてから書き換える */
+    u8 u8_LATA_buff;
+    u8 u8_LATB_buff;
+
+    /* LAT-A 更新処理 */
+
+
+
+    LATB =  u8_gpio_g_out_7seg_led_data_a;
     LATA1 = u8_gpio_g_out_7seg_led_data_b;
     LATA0 = u8_gpio_g_out_7seg_led_data_c;
     LATA6 = u8_gpio_g_out_7seg_led_data_d;

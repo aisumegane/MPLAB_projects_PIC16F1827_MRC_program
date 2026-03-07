@@ -8,8 +8,8 @@
 
 #include <xc.h>
 #include "adc.h"
-#include "main.h"
-#include "./userdefine.h"
+#include "../main.h"
+#include "../userdefine.h"
 
 #include "int.h"
 

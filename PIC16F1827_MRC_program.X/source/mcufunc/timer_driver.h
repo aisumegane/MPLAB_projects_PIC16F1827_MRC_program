@@ -13,11 +13,9 @@ extern "C" {
 #endif
 
 
-
-
-
-
-
+extern void td_g_ccp1_pwm_duty_set( u16 u16_duty );
+extern void td_g_ccp2_pwm_duty_set( u16 u16_duty );
+extern void td_g_ccp3_pwm_duty_set( u16 u16_duty );
 
 
 

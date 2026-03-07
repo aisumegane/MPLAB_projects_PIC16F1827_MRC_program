@@ -7,7 +7,7 @@
  */
 
 #include <xc.h>
-#include "./userdefine.h"
+#include "../userdefine.h"
 
 #include "adc.h"
  
