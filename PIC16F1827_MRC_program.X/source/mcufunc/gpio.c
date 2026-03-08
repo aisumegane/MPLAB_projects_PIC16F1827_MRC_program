@@ -21,18 +21,19 @@
 #define GPIO_IN_SHIFT_1_PORT        RB2
 #define GPIO_IN_SHIFT_2_PORT        RB3
 
-/* 出力ポート割り当て設定 */
-#define GPIO_OUT_7SEG_LED_DATA_A    
+/* 出力ポート割り当て設定 (レジスタ・bit指定) */
+#define GPIO_OUT_7SEG_LED_DATA_A    LATB5
+#define GPIO_OUT_7SEG_LED_DATA_B    LATA1
+#define GPIO_OUT_7SEG_LED_DATA_C    LATA0
+#define GPIO_OUT_7SEG_LED_DATA_D    LATA6
 
 
 ts_gpio_in_def ts_gpio_g_in_shift_0;
 ts_gpio_in_def ts_gpio_g_in_shift_1;
 ts_gpio_in_def ts_gpio_g_in_shift_2;
-ts_gpio_in_def ts_gpio_g_in_neutral;
+ts_gpio_in_def ts_gpio_g_in_neutral;        /* クラッチ制御はメインマイコン側だが、各段のギヤを強制ニュートラル状態にする信号として受け取っておく */
 
 
-/*  */
-//static const gpio_g_output_port[  ]
 
 static const ts_gpio_in_def ts_gpio_s_in_init =
 {
@@ -110,18 +111,11 @@ static void func_gpio_s_in_judge( void )
 /**************************************************************/
 static void func_gpio_s_out_update( void )
 {
-    /* 基本SET or CLEAR なので下位1bitしか数値が入ってないはずだが、一応ビットマスクしてから書き換える */
-    u8 u8_LATA_buff;
-    u8 u8_LATB_buff;
-
-    /* LAT-A 更新処理 */
-
-
-
-    LATB =  u8_gpio_g_out_7seg_led_data_a;
-    LATA1 = u8_gpio_g_out_7seg_led_data_b;
-    LATA0 = u8_gpio_g_out_7seg_led_data_c;
-    LATA6 = u8_gpio_g_out_7seg_led_data_d;
+    /* 一応 0bit目 以外はマスクしておく */
+    GPIO_OUT_7SEG_LED_DATA_A = u8_gpio_g_out_7seg_led_data_a & (u8)0x01;
+    GPIO_OUT_7SEG_LED_DATA_B = u8_gpio_g_out_7seg_led_data_b & (u8)0x01;
+    GPIO_OUT_7SEG_LED_DATA_C = u8_gpio_g_out_7seg_led_data_c & (u8)0x01;
+    GPIO_OUT_7SEG_LED_DATA_D = u8_gpio_g_out_7seg_led_data_d & (u8)0x01;
 }
 
 
@@ -129,8 +123,9 @@ static void func_gpio_s_out_update( void )
 /**************************************************************/
 /*  Function:                                                 */
 /*  ポート入力関数                                             */
-/*                                                            */
-/*                                                            */
+/*  最初のポート状態を基準として連続して同じ入力があったら         */
+/*  判定を切り替える。                                         */
+/*  入力がふらふらしている場合は最初の状態固定になるので注意。     */
 /**************************************************************/
 static void func_gpio_s_port_judge( ts_gpio_in_def ts_port, u8 port_in )
 {   

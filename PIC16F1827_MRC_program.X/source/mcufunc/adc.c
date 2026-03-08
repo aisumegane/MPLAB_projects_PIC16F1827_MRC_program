@@ -1,6 +1,6 @@
 
 /*
- * File:   main.c
+ * File:   adc.c
  * Author: ICE_MEGANE
  *
  * Created on 2020/03/5, 22:26
@@ -10,22 +10,59 @@
 #include "../userdefine.h"
 
 #include "adc.h"
- 
+
+
+
+#define ADC_CH_SERVO_POSI_ADJ           ADC_AN2
+
+
+#define ADC_RESULT_AVE_CYCLE            ((u8)4)
+#define ADC_RESULT_AVE_SHIFT_BIT        ((u8)2)     /* 下位2bitシフト　= /4になる */
+
+#define ADC_RESULT_ID_AVE_CALC_SUM      ((u8)0)
+#define ADC_RESULT_ID_AVE               ((u8)1)
+#define ADC_RESULT_ID_NUM               ( ADC_RESULT_ID_AVE + (u8)1 )
  
 /* 関数プロトタイプ宣言 */
-static void func_adc_s_convert_start(u8 adc_ch);               /* AD変換 開始処理 */
+static void func_adc_s_convert_start(u8 adc_ch);                                /* AD変換 開始処理        */
+static void func_adc_s_calc_data_average( u8 adc_ch );      /* AD変換結果 4回平均処理 */
+static void func_adc_s_result_assign( void );                                   /* AD変換結果 割り当て処理 */
  
  /* AD変換要求 保持用配列 */
-static u8 u8_main_s_adc_req_status[ ADC_CH_NUM ] =
+static u8 u8_adc_s_adc_req_status_tbl[ ADC_CH_NUM ] =
 { /* AD変換チャネルが数値と1対1なので、配列の要素指定にそのまま使える */
     (u8)0, (u8)0,  (u8)0,  (u8)0,  (u8)0,  (u8)0,  (u8)0,  (u8)0,  (u8)0,  (u8)0,  (u8)0,  (u8)0
 };
 
 /* AD変換結果 保持用配列 */
-static u16 u16_main_s_adc_result[ ADC_CH_NUM ] =
+static u16 u16_adc_s_adc_result_tbl[ ADC_CH_NUM ] =
 {
     (u16)0, (u16)0, (u16)0, (u16)0,  (u16)0, (u16)0, (u16)0, (u16)0,  (u16)0, (u16)0, (u16)0, (u16)0
 };
+
+static u16 u16_adc_s_adc_result_ave_tbl[ ADC_CH_NUM ][ ADC_RESULT_ID_NUM ] =
+{
+    {(u16)0, (u16)0 },
+    {(u16)0, (u16)0 },
+    {(u16)0, (u16)0 },
+    {(u16)0, (u16)0 },
+
+    {(u16)0, (u16)0 },
+    {(u16)0, (u16)0 },
+    {(u16)0, (u16)0 },
+    {(u16)0, (u16)0 },
+    
+    {(u16)0, (u16)0 },
+    {(u16)0, (u16)0 },
+    {(u16)0, (u16)0 },
+    {(u16)0, (u16)0 },
+};
+
+
+static u8 u8_adc_s_result_certain_cnt;
+
+
+u16 u16_adc_g_ad_result_ave____servo_posi_adj;
 
 
 
@@ -38,10 +75,11 @@ static u16 u16_main_s_adc_result[ ADC_CH_NUM ] =
 void func_adc_g_main( void )
 {
     /* AD変換結果取得 */
-
+    func_adc_s_calc_data_average( ADC_CH_SERVO_POSI_ADJ );
+    func_adc_s_result_assign();
+    
     /* 次のAD変換開始処理 */
-    func_adc_s_convert_start( ADC_AN2 );
-    func_adc_s_convert_start( ADC_AN3 );
+    func_adc_s_convert_start( ADC_CH_SERVO_POSI_ADJ );
 }
 
 
@@ -56,15 +94,61 @@ void func_adc_g_init( void )
     
     for( u8_loopcnt = (u8)0; u8_loopcnt < ADC_CH_NUM; u8_loopcnt++ )
     {
-        u8_main_s_adc_req_status[ u8_loopcnt ] = (u8)0;
-        u16_main_s_adc_result[ u8_loopcnt ]    = (u16)0;
+        u8_adc_s_adc_req_status_tbl[ u8_loopcnt ]  = (u8)0;         /* 初期化 */
+        u16_adc_s_adc_result_tbl[ u8_loopcnt ]     = (u16)0;        /* 初期化 */
+
+        u16_adc_s_adc_result_ave_tbl[ u8_loopcnt ][ ADC_RESULT_ID_AVE_CALC_SUM ] = (u16)0;        /* あまり良い書き方ではないが、ついでに初期化... */
+        u16_adc_s_adc_result_ave_tbl[ u8_loopcnt ][ ADC_RESULT_ID_AVE ] = (u16)0;                 /* 初期化 */
     }
+
+    u8_adc_s_result_certain_cnt = (u8)0;                            /* 初期化 */
+    u16_adc_g_ad_result_ave____servo_posi_adj = (u16)0;             /* 初期化 */
 }
 
 
 
 
-/* 静的関数 */
+/**************************************************************/
+/*  Function:                                                 */
+/*  AD変換 値取得処理                                          */
+/*                                                            */
+/**************************************************************/
+void func_adc_g_adc_data_get( void )
+{
+    u8 u8_adc_ch;
+    u8 u8_loopcnt;
+    u16 u16_adc_result;
+
+    /* 現在のAD変換対象の取得(この処理自体が割り込みで呼ばれる=初回の変換は完了している地点からスタート) */
+    u8_adc_ch = ADCON0;
+    u8_adc_ch = u8_adc_ch & (u8)0x7C;       /* ビットマスク:0b0111-1100 */
+    u8_adc_ch = u8_adc_ch >> 2U;            /* CHSのデータを2bit下位シフトして数値として使えるようにする */
+
+    /* AD変換結果の取得 */
+    u16_adc_result = (u16)ADRESH;
+    u16_adc_result = u16_adc_result << 8U;              /* 上位データを8ビット上へ移動　※データはLSB詰めで取得している */
+    u16_adc_result += (u16)ADRESL;                           /* 下位データはそのまま加算する */
+
+    u16_adc_s_adc_result_tbl[ u8_adc_ch ] = u16_adc_result;    /* AD変換結果取得 */
+    u8_adc_s_adc_req_status_tbl[ u8_adc_ch ] = CLEAR;          /* 変換要求クリア */
+
+    /* AD変換未完了CHの検索 */
+    for( u8_loopcnt = (u8)0; u8_loopcnt < ADC_CH_NUM; u8_loopcnt++ )
+    { /* AD変換要求が連続して発生 = 渋滞している場合への対応 */
+        if( u8_adc_s_adc_req_status_tbl[ u8_loopcnt ] == SET )
+        { /* AD変換要求があるチャネルを発見 */
+            break;
+        }
+    }
+
+    /* 次のAD変換実行 */
+    if( u8_loopcnt < ADC_CH_NUM )
+    { /* 少なくとも1chの未完了-変換要求が残っている。 */
+        func_adc_s_convert_start( u8_loopcnt );
+    }
+}
+
+
 /**************************************************************/
 /*  Function:                                                 */
 /*  AD変換開始要求処理                                         */
@@ -76,7 +160,7 @@ static void func_adc_s_convert_start(u8 adc_ch)
     u8 u8_setting_buff;
     u8 u8_adc_now_process;
 
-    u8_main_s_adc_req_status[ adc_ch ] = SET;       /* AD変換要求を格納する */
+    u8_adc_s_adc_req_status_tbl[ adc_ch ] = SET;       /* AD変換要求を格納する */
 
     u8_adc_now_process = ADCON0;
     
@@ -100,49 +184,46 @@ static void func_adc_s_convert_start(u8 adc_ch)
     /* ここで変換要求を出して以降、割り込み内でこの関数を再度呼び出し、自動で連続処理する */
 }
 
+
 /**************************************************************/
 /*  Function:                                                 */
-/*  AD変換 値取得処理                                          */
+/*  AD変換結果 平均化処理                                       */
 /*                                                            */
 /**************************************************************/
-void func_adc_g_adc_data_get( void )
+static void func_adc_s_calc_data_average( u8 adc_ch )
 {
-    u8 u8_adc_ch;
-    u8 u8_loopcnt;
-    u16 u16_adc_result;
+    /* 最新の取得値を加算 */
+    u16_adc_s_adc_result_ave_tbl[ adc_ch ][ ADC_RESULT_ID_AVE_CALC_SUM ] += u16_adc_s_adc_result_tbl[ adc_ch ];             /* 平均用合計値保存バッファに、最新値を１コ追加する */
 
-    /* 現在のAD変換対象の取得(この処理自体が割り込みで呼ばれる=初回の変換は完了している地点からスタート) */
-    u8_adc_ch = ADCON0;
-    u8_adc_ch = u8_adc_ch & (u8)0x7C;       /* ビットマスク:0b0111-1100 */
-    u8_adc_ch = u8_adc_ch >> 2U;            /* CHSのデータを2bit下位シフトして数値として使えるようにする */
 
-    /* AD変換結果の取得 */
-    u16_adc_result = (u16)ADRESH;
-    u16_adc_result = u16_adc_result << 8U;              /* 上位データを8ビット上へ移動　※データはLSB詰めで取得している */
-    u16_adc_result += (u16)ADRESL;                           /* 下位データはそのまま加算する */
-
-    u16_main_s_adc_result[ u8_adc_ch ] = u16_adc_result;    /* AD変換結果取得 */
-    u8_main_s_adc_req_status[ u8_adc_ch ] = CLEAR;          /* 変換要求クリア */
-
-    /* AD変換未完了CHの検索 */
-    for( u8_loopcnt = (u8)0; u8_loopcnt < ADC_CH_NUM; u8_loopcnt++ )
-    { /* AD変換要求が連続して発生 = 渋滞している場合への対応 */
-        if( u8_main_s_adc_req_status[ u8_loopcnt ] == SET )
-        { /* AD変換要求があるチャネルを発見 */
-            break;
-        }
+    if( u8_adc_s_result_certain_cnt < U8_MAX )
+    {
+        u8_adc_s_result_certain_cnt++;
     }
 
-    /* 次のAD変換実行 */
-    if( u8_loopcnt < ADC_CH_NUM )
-    { /* 少なくとも1chの未完了-変換要求が残っている。 */
-        func_adc_s_convert_start( u8_loopcnt );
+    if( u8_adc_s_result_certain_cnt > ADC_RESULT_AVE_CYCLE )
+    {
+        /* 平均値を出す */
+        if( u16_adc_s_adc_result_ave_tbl[ adc_ch ][ ADC_RESULT_ID_AVE_CALC_SUM ] > u16_adc_s_adc_result_ave_tbl[ adc_ch ][ ADC_RESULT_ID_AVE ] )
+        {
+            u16_adc_s_adc_result_ave_tbl[ adc_ch ][ ADC_RESULT_ID_AVE_CALC_SUM ] -= u16_adc_s_adc_result_ave_tbl[ adc_ch ][ ADC_RESULT_ID_AVE ];            /* 合計バッファから、前回までの1平均分を引く */
+        }
+        
+        u16_adc_s_adc_result_ave_tbl[ adc_ch ][ ADC_RESULT_ID_AVE ] = u16_adc_s_adc_result_ave_tbl[ adc_ch ][ ADC_RESULT_ID_AVE_CALC_SUM ] >> ADC_RESULT_AVE_SHIFT_BIT;
     }
 }
 
 
 
-
+/**************************************************************/
+/*  Function:                                                 */
+/*  AD変換結果 割り当て処理                                     */
+/*                                                            */
+/**************************************************************/
+static void func_adc_s_result_assign( void )
+{
+    u16_adc_g_ad_result_ave____servo_posi_adj = u16_adc_s_adc_result_ave_tbl[ ADC_CH_SERVO_POSI_ADJ ][ ADC_RESULT_ID_AVE ];         /* 1変数にして引き渡す */
+}
 
 
 

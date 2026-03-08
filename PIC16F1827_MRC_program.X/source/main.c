@@ -38,12 +38,18 @@
 #include <xc.h>
 #include "userdefine.h"     /* ※ヘッダファイル内でも定義を使用しているので、エラーが出ないよう一番最初に呼び出す※ */
 
-/* 追加インクルード*/
 
 #include "./mcufunc/adc.h"
 #include "./mcufunc/gpio.h"
 #include "./mcufunc/int.h"
 #include "./mcufunc/mcu_setup.h"
+
+#include "./tools/servo.h"
+
+#include "indicate.h"
+#include "shift.h"
+
+#include "main.h"
 
 
 /* ファイル内定義 */
@@ -52,7 +58,6 @@
 
 /* 関数プロトタイプ宣言 */
 static void func_main_s_init( void );
-static void func_main_s_program_start( void );
 static void func_main_s_loop( void );
 
 
@@ -132,6 +137,10 @@ static void func_main_s_loop( void )
     func_adc_g_main();          /* AD変換処理　 */
     func_int_g_main();          /* 割り込み処理 */
     func_gpio_g_main();         /* GPIOポート更新処理 */
+
+    func_shift_g_main();        /* シフトチェンジ処理 */
+    func_indicate_g_main();     /* 表示処理 */
+
 }
 
 
@@ -150,6 +159,9 @@ static void func_main_s_init( void )
     func_adc_g_init();
     func_int_g_init();
     func_gpio_g_init();
+
+    func_shift_g_init();
+    func_indicate_g_init();
 }
 
 
