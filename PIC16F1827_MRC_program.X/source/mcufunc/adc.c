@@ -22,13 +22,46 @@
 #define ADC_RESULT_ID_AVE_CALC_SUM      ((u8)0)
 #define ADC_RESULT_ID_AVE               ((u8)1)
 #define ADC_RESULT_ID_NUM               ( ADC_RESULT_ID_AVE + (u8)1 )
+
+
+
+/* AD変換チャネル定義 */
+#define ADC_AN0     ((u8)0)
+#define ADC_AN1     ((u8)1)
+#define ADC_AN2     ((u8)2)
+#define ADC_AN3     ((u8)3)
+#define ADC_AN4     ((u8)4)
+#define ADC_AN5     ((u8)5)
+#define ADC_AN6     ((u8)6)
+#define ADC_AN7     ((u8)7)
+#define ADC_AN8     ((u8)8)
+#define ADC_AN9     ((u8)9)
+#define ADC_AN10    ((u8)10)
+#define ADC_AN11    ((u8)11)
+#define ADC_CH_NUM  (ADC_AN11+(u8)1)
+
+#define ADC_REQ     ((u8)0)
+#define ADC_RESULT  ((u8)1)
+#define ADC_DATA_SELECT (ADC_RESULT + (u8)1)
+
+
+/* 変換時間 */
+#define ADC_ACQUISION_TIME      ((u8)20)
+
+
+
  
 /* 関数プロトタイプ宣言 */
 static void func_adc_s_convert_start(u8 adc_ch);                                /* AD変換 開始処理        */
 static void func_adc_s_calc_data_average( u8 adc_ch );      /* AD変換結果 4回平均処理 */
 static void func_adc_s_result_assign( void );                                   /* AD変換結果 割り当て処理 */
- 
- /* AD変換要求 保持用配列 */
+
+
+static u8 u8_adc_s_result_certain_cnt;
+u16 u16_adc_g_ad_result_ave____servo_posi_adj;
+
+
+/* AD変換要求 保持用配列 */
 static u8 u8_adc_s_adc_req_status_tbl[ ADC_CH_NUM ] =
 { /* AD変換チャネルが数値と1対1なので、配列の要素指定にそのまま使える */
     (u8)0, (u8)0,  (u8)0,  (u8)0,  (u8)0,  (u8)0,  (u8)0,  (u8)0,  (u8)0,  (u8)0,  (u8)0,  (u8)0
@@ -59,10 +92,7 @@ static u16 u16_adc_s_adc_result_ave_tbl[ ADC_CH_NUM ][ ADC_RESULT_ID_NUM ] =
 };
 
 
-static u8 u8_adc_s_result_certain_cnt;
 
-
-u16 u16_adc_g_ad_result_ave____servo_posi_adj;
 
 
 

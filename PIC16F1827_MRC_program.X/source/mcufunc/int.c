@@ -7,9 +7,10 @@
  */
 
 #include <xc.h>
+#include "../userdefine.h"
+
 #include "adc.h"
 #include "../main.h"
-#include "../userdefine.h"
 
 #include "int.h"
 
