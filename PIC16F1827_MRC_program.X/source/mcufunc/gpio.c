@@ -89,6 +89,25 @@ void func_gpio_g_init( void )
 }
 
 
+/* 出力関数定義 */
+/**************************************************************/
+/*  Function:                                                 */
+/*  ポート出力関数                                             */
+/*                                                            */
+/**************************************************************/
+void func_gpio_g__out( u8 u8_state )
+{
+    if( ( u8_state == CLEAR ) || ( u8_state == SET ) )
+    {
+        GPIO_OUT_7SEG_LED_DATA_C = u8_state;
+    }
+    else
+    { /* 不定値入力時は0としておく */
+        GPIO_OUT_7SEG_LED_DATA_C = CLEAR;
+    }
+}
+
+
 /**************************************************************/
 /*  Function:                                                 */
 /*  ポート入力判定関数                                          */
@@ -139,6 +158,8 @@ static void func_gpio_s_port_judge( ts_gpio_in_def ts_port, u8 port_in )
         ts_port.u8_state = port_in;
     }
 }
+
+
 
 
 

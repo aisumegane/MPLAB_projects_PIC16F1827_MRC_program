@@ -109,6 +109,10 @@ const static u16 u16_servo_s_angle_set_array[ SERVO_ANGLE_NUM ] =
 };
 
 
+/* 関数プロトタイプ宣言 */
+static void func_servo_s_init( void );
+
+
 /*  */
 /**************************************************************/
 /*  Function:                                                 */
@@ -146,3 +150,13 @@ void servo_s_angle_set( u8 u8_angle_idx, u8 servo_num )
     }
 }
 
+
+/**************************************************************/
+/*  Function:                                                 */
+/*  サーボ関連 初期化関数                                       */
+/*                                                            */
+/**************************************************************/
+static void func_servo_s_init( void )
+{
+    ;
+}

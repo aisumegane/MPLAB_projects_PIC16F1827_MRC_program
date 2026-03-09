@@ -159,6 +159,10 @@ static void func_main_s_init( void )
     func_adc_g_init();
     func_int_g_init();
     func_gpio_g_init();
+    
+    func_7seg_s_init();
+    func_servo_s_init();
+    
 
     func_shift_g_init();
     func_indicate_g_init();

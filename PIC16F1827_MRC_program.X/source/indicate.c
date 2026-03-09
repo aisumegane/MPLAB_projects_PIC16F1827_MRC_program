@@ -7,12 +7,16 @@
 
 #include <xc.h>
 #include "pic16F1827.h"
-
 #include "userdefine.h"
+
+
 #include "./mcufunc/gpio.h"
+
+#include "./tools/segment.h"
 
 
 #include "indicate.h"
+#include "shift.h"
 
 
 /* シフトチェンジの制御を担当 */
@@ -53,6 +57,6 @@ void func_indicate_g_init( void )
 /**************************************************************/
 static void func_indicate_s_shift_posi_disp( void )
 {
-    ;
+    func_7seg_s_tc4511bp_data_set( u8_shift_g_position );
 }
 

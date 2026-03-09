@@ -26,10 +26,11 @@ static void func_shift_s_shift_degree_calc( void );
 static void func_shift_s_shift_change( void );
 
 
-
+u8 u8_shift_g_position;
 static u8 u8_servo_s_deg_newtral_idx;
 static u8 u8_servo_s_deg_upper_idx;
 static u8 u8_servo_s_deg_lower_idx;
+
 
 
 /* グローバル変数 */
@@ -41,6 +42,7 @@ static u8 u8_servo_s_deg_lower_idx;
 /**************************************************************/
 void func_shift_g_main( void )
 {
+    func_shift_s_shift_posi_calc();             /* 現在のシフト位置要求設定 */
     func_shift_s_shift_degree_calc();           /* サーボの角度計算処理 */
     func_shift_s_shift_change();                /* シフトチェンジ処理 */
 }
@@ -54,11 +56,43 @@ void func_shift_g_main( void )
 /**************************************************************/
 void func_shift_g_init( void )
 {
+    u8_shift_g_position        = (u8)0;
     u8_servo_s_deg_newtral_idx = (u8)0;
     u8_servo_s_deg_upper_idx   = (u8)0;
     u8_servo_s_deg_lower_idx   = (u8)0;
 }
 
+
+
+/**************************************************************/
+/*  Function:                                                 */
+/*  初期化関数                                                 */
+/*                                                            */
+/*                                                            */
+/**************************************************************/
+static void func_shift_s_shift_posi_calc( void )
+{
+    u8 u8_shift_buff;
+    
+    u8_shift_buff = (u8)0;
+    
+    /* 0~7の計8位置。附番とずれてるのは若干ややこしいかも? */
+    if( ts_gpio_g_in_shift_0.u8_state == SET )
+    {
+        u8_shift_buff += (u8)0x01;
+    }
+    if( ts_gpio_g_in_shift_1.u8_state == SET )
+    {
+        u8_shift_buff += (u8)0x02;
+    }
+    if( ts_gpio_g_in_shift_2.u8_state == SET )
+    {
+        u8_shift_buff += (u8)0x04;
+    }
+    
+    /* 10進数として扱えるようにする */
+    u8_shift_g_position = u8_shift_buff;
+}
 
 /**************************************************************/
 /*  Function:                                                 */
