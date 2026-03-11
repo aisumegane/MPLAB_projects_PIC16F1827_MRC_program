@@ -13,8 +13,8 @@ extern "C" {
 #endif
 
 
-extern void func_7seg_s_tc4511bp_data_set( u8 disp_num );
-extern void func_7seg_s_init( void );
+extern void func_segment_g_tc4511bp_data_set( u8 disp_num );
+extern void func_segment_g_init( void );
 
 
 #ifdef	__cplusplus

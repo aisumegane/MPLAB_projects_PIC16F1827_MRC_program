@@ -15,6 +15,7 @@
 #include "./mcufunc/adc.h"
 #include "./tools/servo.h"
 
+#define SHIFT_CHK_TIME                ((u8)500)     /* *10ms */
 
 #define SERVO_POSI_LOWER_DEC          SERVO_DEG_IDX__15     /* 中心位置に対して下方向に何度ずらすか */
 #define SERVO_POSI_UPPER_ADD          SERVO_DEG_IDX__15     /* 中心位置に対して上方向に何度ずらすか */
@@ -26,11 +27,12 @@ static void func_shift_s_shift_degree_calc( void );
 static void func_shift_s_shift_change( void );
 
 
-u8 u8_shift_g_position;
-static u8 u8_servo_s_deg_newtral_idx;
-static u8 u8_servo_s_deg_upper_idx;
-static u8 u8_servo_s_deg_lower_idx;
+static u8 u8_shift_s_deg_newtral_idx;
+static u8 u8_shift_s_deg_upper_idx;
+static u8 u8_shift_s_deg_lower_idx;
 
+
+static u8 u8_shift_s_shift_chk_cnt;
 
 
 /* グローバル変数 */
@@ -42,7 +44,6 @@ static u8 u8_servo_s_deg_lower_idx;
 /**************************************************************/
 void func_shift_g_main( void )
 {
-    func_shift_s_shift_posi_calc();             /* 現在のシフト位置要求設定 */
     func_shift_s_shift_degree_calc();           /* サーボの角度計算処理 */
     func_shift_s_shift_change();                /* シフトチェンジ処理 */
 }
@@ -56,43 +57,12 @@ void func_shift_g_main( void )
 /**************************************************************/
 void func_shift_g_init( void )
 {
-    u8_shift_g_position        = (u8)0;
-    u8_servo_s_deg_newtral_idx = (u8)0;
-    u8_servo_s_deg_upper_idx   = (u8)0;
-    u8_servo_s_deg_lower_idx   = (u8)0;
+    u8_shift_s_deg_newtral_idx = (u8)0;
+    u8_shift_s_deg_upper_idx   = (u8)0;
+    u8_shift_s_deg_lower_idx   = (u8)0;
 }
 
 
-
-/**************************************************************/
-/*  Function:                                                 */
-/*  初期化関数                                                 */
-/*                                                            */
-/*                                                            */
-/**************************************************************/
-static void func_shift_s_shift_posi_calc( void )
-{
-    u8 u8_shift_buff;
-    
-    u8_shift_buff = (u8)0;
-    
-    /* 0~7の計8位置。附番とずれてるのは若干ややこしいかも? */
-    if( ts_gpio_g_in_shift_0.u8_state == SET )
-    {
-        u8_shift_buff += (u8)0x01;
-    }
-    if( ts_gpio_g_in_shift_1.u8_state == SET )
-    {
-        u8_shift_buff += (u8)0x02;
-    }
-    if( ts_gpio_g_in_shift_2.u8_state == SET )
-    {
-        u8_shift_buff += (u8)0x04;
-    }
-    
-    /* 10進数として扱えるようにする */
-    u8_shift_g_position = u8_shift_buff;
-}
 
 /**************************************************************/
 /*  Function:                                                 */
@@ -127,30 +97,30 @@ static void func_shift_s_shift_degree_calc( void )
 
     if( u8_loopidx < SERVO_DEG_IDX__180 )
     {
-        u8_servo_s_deg_newtral_idx = u8_loopidx;
+        u8_shift_s_deg_newtral_idx = u8_loopidx;
     }
     else
     {
-        u8_servo_s_deg_newtral_idx = SERVO_DEG_IDX__180;
+        u8_shift_s_deg_newtral_idx = SERVO_DEG_IDX__180;
     }
     
     
     /* 下側時の角度指定  */
-    if( u8_servo_s_deg_newtral_idx > SERVO_POSI_LOWER_DEC )
+    if( u8_shift_s_deg_newtral_idx > SERVO_POSI_LOWER_DEC )
     {
-        u8_servo_s_deg_lower_idx = u8_servo_s_deg_newtral_idx - SERVO_POSI_LOWER_DEC;
+        u8_shift_s_deg_lower_idx = u8_shift_s_deg_newtral_idx - SERVO_POSI_LOWER_DEC;
     }
     else
     { /* 下側に寄せると0度になってしまう場合は、0度に固定する */
-        u8_servo_s_deg_lower_idx = SERVO_DEG_IDX__0;
+        u8_shift_s_deg_lower_idx = SERVO_DEG_IDX__0;
     }
 
     /* 上側時の角度指定  */
-    u8_servo_s_deg_upper_idx = u8_servo_s_deg_newtral_idx + SERVO_POSI_UPPER_ADD;
+    u8_shift_s_deg_upper_idx = u8_shift_s_deg_newtral_idx + SERVO_POSI_UPPER_ADD;
     
-    if( u8_servo_s_deg_upper_idx > SERVO_DEG_IDX__180 )
+    if( u8_shift_s_deg_upper_idx > SERVO_DEG_IDX__180 )
     {
-        u8_servo_s_deg_upper_idx = SERVO_DEG_IDX__180;
+        u8_shift_s_deg_upper_idx = SERVO_DEG_IDX__180;
     }
 }
 
@@ -169,39 +139,39 @@ static void func_shift_s_shift_change( void )
         /* サーボ上下に固定 */
         if( ts_gpio_g_in_shift_0.u8_state == SET )
         {
-            servo_s_angle_set( u8_servo_s_deg_upper_idx, SERVO_SHIFT_0 );
+            servo_s_angle_set( u8_shift_s_deg_upper_idx, SERVO_SHIFT_0 );
         }
         else
         {
-            servo_s_angle_set( u8_servo_s_deg_lower_idx, SERVO_SHIFT_0 );
+            servo_s_angle_set( u8_shift_s_deg_lower_idx, SERVO_SHIFT_0 );
         }
 
 
         if( ts_gpio_g_in_shift_1.u8_state == SET )
         {
-            servo_s_angle_set( u8_servo_s_deg_upper_idx, SERVO_SHIFT_1 );
+            servo_s_angle_set( u8_shift_s_deg_upper_idx, SERVO_SHIFT_1 );
         }
         else
         {
-            servo_s_angle_set( u8_servo_s_deg_lower_idx, SERVO_SHIFT_1 );
+            servo_s_angle_set( u8_shift_s_deg_lower_idx, SERVO_SHIFT_1 );
         }
 
 
         if( ts_gpio_g_in_shift_2.u8_state == SET )
         {
-            servo_s_angle_set( u8_servo_s_deg_upper_idx, SERVO_SHIFT_2 );
+            servo_s_angle_set( u8_shift_s_deg_upper_idx, SERVO_SHIFT_2 );
         }
         else
         {
-            servo_s_angle_set( u8_servo_s_deg_lower_idx, SERVO_SHIFT_2 );
+            servo_s_angle_set( u8_shift_s_deg_lower_idx, SERVO_SHIFT_2 );
         }
     }
     else
     {
         /* サーボ 中立 */
-        servo_s_angle_set( u8_servo_s_deg_newtral_idx, SERVO_SHIFT_0 );
-        servo_s_angle_set( u8_servo_s_deg_newtral_idx, SERVO_SHIFT_1 );
-        servo_s_angle_set( u8_servo_s_deg_newtral_idx, SERVO_SHIFT_2 );
+        servo_s_angle_set( u8_shift_s_deg_newtral_idx, SERVO_SHIFT_0 );
+        servo_s_angle_set( u8_shift_s_deg_newtral_idx, SERVO_SHIFT_1 );
+        servo_s_angle_set( u8_shift_s_deg_newtral_idx, SERVO_SHIFT_2 );
     }
 }
 

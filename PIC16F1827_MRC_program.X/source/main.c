@@ -44,6 +44,7 @@
 #include "./mcufunc/int.h"
 #include "./mcufunc/mcu_setup.h"
 
+#include "./tools/segment.h"
 #include "./tools/servo.h"
 
 #include "indicate.h"
@@ -160,8 +161,8 @@ static void func_main_s_init( void )
     func_int_g_init();
     func_gpio_g_init();
     
-    func_7seg_s_init();
-    func_servo_s_init();
+    func_segment_g_init();
+    func_servo_g_init();
     
 
     func_shift_g_init();

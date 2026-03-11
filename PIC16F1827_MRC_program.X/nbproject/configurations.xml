@@ -33,6 +33,8 @@
         <logicalFolder name="tools" displayName="tools" projectFiles="true">
           <itemPath>source/tools/servo.c</itemPath>
           <itemPath>source/tools/servo.h</itemPath>
+          <itemPath>source/tools/segment.c</itemPath>
+          <itemPath>source/tools/segment.h</itemPath>
         </logicalFolder>
         <itemPath>source/main.c</itemPath>
         <itemPath>source/main.h</itemPath>
@@ -57,7 +59,7 @@
         <targetPluginBoard></targetPluginBoard>
         <platformTool>noID</platformTool>
         <languageToolchain>XC8</languageToolchain>
-        <languageToolchainVersion>2.41</languageToolchainVersion>
+        <languageToolchainVersion>3.10</languageToolchainVersion>
         <platform>3</platform>
       </toolsSet>
       <packs>

@@ -15,7 +15,7 @@
 /*  7セグ制御 初期化処理                                       */
 /*                                                            */
 /**************************************************************/
-void func_7seg_s_init( void )
+void func_segment_g_init( void )
 {
     ;
 }
@@ -26,7 +26,7 @@ void func_7seg_s_init( void )
 /*  tc4511BP ICを使用する場合の出力関数                         */
 /*  1桁表示用                                                  */
 /**************************************************************/
-void func_7seg_s_tc4511bp_data_set( u8 disp_num )
+void func_segment_g_tc4511bp_data_set( u8 disp_num )
 {
     /* 最大出力マスク */
     if( disp_num > (u8)9 )

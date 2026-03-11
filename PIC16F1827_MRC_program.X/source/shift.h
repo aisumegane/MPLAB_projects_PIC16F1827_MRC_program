@@ -16,7 +16,6 @@ extern "C" {
 extern void func_shift_g_main( void );
 extern void func_shift_g_init( void );
 
-extern u8 u8_shift_g_position;
 
 #ifdef	__cplusplus
 }

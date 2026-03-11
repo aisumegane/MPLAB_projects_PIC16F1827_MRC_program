@@ -60,6 +60,7 @@ extern "C" {
 #define SERVO_ANGLE_NUM                 ((u8)SERVO_DEG_IDX__MAX + (u8)1)
 
 
+extern void func_servo_g_init( void );
 extern void servo_s_angle_set( u8 u8_angle_idx, u8 servo_num );
 
 #ifdef	__cplusplus
