@@ -17,16 +17,17 @@ typedef struct gpio_in
     u8 u8_judge_cnt;
     u8 u8_buff;
     u8 u8_state;
-}ts_gpio_in_def;
+    u8 u8_state_bf;
+}gpio_in;
 
 extern void func_gpio_g_main( void );
 extern void func_gpio_g_init( void );
 
 
-extern ts_gpio_in_def ts_gpio_g_in_shift_0;
-extern ts_gpio_in_def ts_gpio_g_in_shift_1;
-extern ts_gpio_in_def ts_gpio_g_in_shift_2;
-extern ts_gpio_in_def ts_gpio_g_in_neutral;
+extern gpio_in ts_gpio_g_in_shift_0;
+extern gpio_in ts_gpio_g_in_shift_1;
+extern gpio_in ts_gpio_g_in_shift_2;
+extern gpio_in ts_gpio_g_in_neutral;
 
 extern u8 u8_gpio_g_out_7seg_led_data_a;
 extern u8 u8_gpio_g_out_7seg_led_data_b;
